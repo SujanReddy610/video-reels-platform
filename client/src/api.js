@@ -96,7 +96,7 @@ import axios from "axios";
 // ------------------
 // CRITICAL FIX: Set the baseURL using the environment variable, falling back 
 // to the deployed URL for safety if the variable is not set correctly.
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://video-reels-platform.onrender.com/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const API = axios.create({
   baseURL: API_BASE_URL,
