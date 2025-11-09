@@ -305,13 +305,17 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
+
+      if (
+        allowedOrigins.some((allowed) =>
+          allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
+        )
+      ) {
+        callback(null, true);
       } else {
         console.warn("❌ CORS blocked for origin:", origin);
-        return callback(new Error("Not allowed by CORS"));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -320,7 +324,6 @@ app.use(
   })
 );
 
-// Handle preflight (OPTIONS) requests globally
 app.options("*", cors());
 
 // ------------------ MIDDLEWARE ------------------
