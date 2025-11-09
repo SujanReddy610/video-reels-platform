@@ -302,28 +302,18 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow server-to-server or Postman (no origin)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      } else {
-        console.warn("❌ CORS blocked request from:", origin);
-        return callback(new Error("Not allowed by CORS"));
-      }
+      if (!origin) return callback(null, true); // allow server-to-server requests
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      console.warn("❌ CORS blocked request from:", origin);
+      return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Authorization",
-    ],
-    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+    credentials: true, // important for cookies or JWT in headers
   })
 );
 
-// ✅ Handle all preflight requests
+// ✅ Handle preflight requests globally
 app.options("*", cors());
 
 // ------------------ MIDDLEWARE ------------------
