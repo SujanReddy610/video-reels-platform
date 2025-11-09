@@ -316,10 +316,9 @@ app.use(cors({
   credentials: true, // IMPORTANT for cookies/JWT in headers
 }));
 
-// *** CRITICAL STEP FOR PERSISTENT CORS ISSUES ***
-// Manually handle all OPTIONS requests before hitting the main router/API routes.
-// This forces the preflight response to be sent with the correct headers.
-// app.options('*', cors()); 
+// *** CRITICAL STEP FOR PERSISTENT CORS ISSUES (REMOVED CRASHING LINE) ***
+// The line app.options('*', cors()); was removed because it was causing a PathError on startup.
+// The app.use(cors) above should handle preflight requests.
 
 
 // Serve uploaded files (for videos/images temporarily stored)
