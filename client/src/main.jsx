@@ -50,8 +50,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         {/* App component is now the layout that renders the home content */}
         {/* <Route path="/" element={<App />} />  */}
-        <Route path="*" element={<App />} />
-        <Route path="/" element={<App />} /> 
+        <Route path="/*" element={<App />} />
+        {/* <Route path="/" element={<App />} />  */}
         {/* These components are standalone pages handled by the router */}
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/profile" element={<Profile />} /> 
