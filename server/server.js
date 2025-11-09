@@ -299,34 +299,27 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ------------------ CORS Configuration Fix ------------------
-// CRITICAL FIX: This list MUST contain every domain where your frontend is hosted.
+// ------------------ CORS Configuration Fix (Simplified Logic) ------------------
+const PRODUCTION_FRONTEND_URL = process.env.FRONTEND_URL || "https://video-reels-platform.onrender.com";
+
 const allowedOrigins = [
-  "http://localhost:5173", // Local frontend development
-  "https://video-reels-platform.vercel.app", // Example Vercel deployment (if applicable)
-  "https://video-reels-platform-1.onrender.com", // Old testing domain
-  "https://video-reels-platform.onrender.com", // The main production domain (CRITICAL addition)
+  "http://localhost:5173", // Local development
+  PRODUCTION_FRONTEND_URL, 
+  /https?:\/\/.*\.onrender\.com$/, // Allows all subdomains on Render (CRITICAL FIX)
+  /https?:\/\/.*\.vercel\.app$/, // Allows Vercel
 ];
 
-// ✅ Correct CORS configuration to allow cross-origin requests
+// ✅ Simplified CORS configuration middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (e.g., mobile apps, curl, postman)
-    if (!origin) return callback(null, true); 
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      // Log the blocked origin for better debugging
-      console.error(`CORS Blocked: Origin ${origin} not in allowed list.`);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: allowedOrigins, // Pass the array directly to let the cors package handle the matching
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true, // IMPORTANT for cookies/JWT in headers
 }));
 
-// Optional: Handle preflight requests globally
-app.options(/.*/, cors());
+// *** CRITICAL STEP FOR PERSISTENT CORS ISSUES ***
+// Manually handle all OPTIONS requests before hitting the main router/API routes.
+// This forces the preflight response to be sent with the correct headers.
+// app.options('*', cors()); 
 
 
 // Serve uploaded files (for videos/images temporarily stored)
