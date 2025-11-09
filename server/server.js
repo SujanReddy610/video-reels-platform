@@ -293,29 +293,22 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ------------------ CORS CONFIG ------------------
-// ------------------ CORS CONFIG ------------------
+// ------------------ CORS CONFIG (FIXED) ------------------
 const allowedOrigins = [
   "http://localhost:5173",
   "https://video-reels-platform-1.onrender.com",
 ];
 
+// FIX: We are now passing the array directly to 'origin'. 
+// The 'cors' package handles the matching reliably, avoiding any custom function errors.
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      console.warn("❌ CORS blocked request from:", origin);
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: allowedOrigins, // <-- Passing the array directly
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
     credentials: true,
   })
 );
-
-// ✅ REMOVE app.options("*", cors());
-
 
 // ------------------ MIDDLEWARE ------------------
 app.use(express.json());
