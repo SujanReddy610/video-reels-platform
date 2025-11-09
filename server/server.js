@@ -299,16 +299,19 @@ const allowedOrigins = [
   "https://video-reels-platform-1.onrender.com",
 ];
 
-// FIX: We are now passing the array directly to 'origin'. 
-// The 'cors' package handles the matching reliably, avoiding any custom function errors.
-app.use(
-  cors({
-    origin: allowedOrigins, // <-- Passing the array directly
+const corsOptions = {
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
     credentials: true,
-  })
-);
+};
+
+// Apply CORS middleware globally for all requests
+app.use(cors(corsOptions));
+
+// FIX: Explicitly handle preflight (OPTIONS) requests for all routes.
+// This ensures the CORS headers are always sent in the preflight response.
+app.options('*', cors(corsOptions)); // <-- ADDED THIS LINE
 
 // ------------------ MIDDLEWARE ------------------
 app.use(express.json());
@@ -362,3 +365,4 @@ sequelize
   .catch((err) => {
     console.error("❌ Database sync failed:", err);
   });
+
