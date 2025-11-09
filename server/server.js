@@ -297,30 +297,26 @@ const __dirname = path.dirname(__filename);
 
 // ------------------ CORS CONFIG ------------------
 const allowedOrigins = [
-  "http://localhost:5173", // Local dev
-  "https://video-reels-platform.vercel.app", // Deployed frontend
+  "http://localhost:5173", // local dev
+  "https://video-reels-platform.vercel.app", // old Vercel frontend
+  "https://video-reels-platform-1.onrender.com", // frontend on Render
 ];
 
-// ✅ Proper CORS setup (handles both local + production)
 app.use(
   cors({
     origin: function (origin, callback) {
+      // allow server-to-server and curl
       if (!origin) return callback(null, true);
-
-      if (
-        allowedOrigins.some((allowed) =>
-          allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
-        )
-      ) {
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         console.warn("❌ CORS blocked for origin:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
   })
 );
 
