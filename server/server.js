@@ -299,51 +299,27 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ------------------ CORS Configuration Fix (Final Attempt) ------------------
-// Instead of hardcoding every potential URL, we use a more flexible configuration 
-// to allow common development and production patterns.
-
-// Use environment variables for the main production frontend URL
+// ------------------ CORS Configuration Fix (Simplified Logic) ------------------
 const PRODUCTION_FRONTEND_URL = process.env.FRONTEND_URL || "https://video-reels-platform.onrender.com";
 
 const allowedOrigins = [
   "http://localhost:5173", // Local development
   PRODUCTION_FRONTEND_URL, 
-  // Allow all subdomains of onrender.com for reliable testing and staging 
-  // on platforms like Render where service IDs generate unique subdomains.
-  /https?:\/\/.*\.onrender\.com$/, 
-  // Allow Vercel for maximum flexibility
-  /https?:\/\/.*\.vercel\.app$/, 
+  /https?:\/\/.*\.onrender\.com$/, // Allows all subdomains on Render (CRITICAL FIX)
+  /https?:\/\/.*\.vercel\.app$/, // Allows Vercel
 ];
 
-// ✅ Updated CORS configuration to use a RegEx pattern check for flexibility
+// ✅ Simplified CORS configuration middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    // 1. Allow requests with no origin (e.g., mobile apps, curl, Postman)
-    if (!origin) return callback(null, true); 
-    
-    // 2. Check if the origin is in the allowed list or matches a pattern
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (typeof allowed === 'string') {
-        return allowed === origin;
-      }
-      return allowed.test(origin);
-    });
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      // Log the blocked origin for better debugging
-      console.error(`CORS Blocked: Origin ${origin} not in allowed list.`);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: allowedOrigins, // Pass the array directly to let the cors package handle the matching
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true, // IMPORTANT for cookies/JWT in headers
 }));
 
-// Optional: Handle preflight requests globally
-app.options(/.*/, cors());
+// *** CRITICAL STEP FOR PERSISTENT CORS ISSUES ***
+// Manually handle all OPTIONS requests before hitting the main router/API routes.
+// This forces the preflight response to be sent with the correct headers.
+app.options('*', cors()); 
 
 
 // Serve uploaded files (for videos/images temporarily stored)
