@@ -297,17 +297,22 @@ const __dirname = path.dirname(__filename);
 
 // ------------------ CORS CONFIG ------------------
 const allowedOrigins = [
-  "http://localhost:5173", // local dev
-  "https://video-reels-platform.vercel.app", // old Vercel frontend
-  "https://video-reels-platform-1.onrender.com", // frontend on Render
+  "http://localhost:5173", // Local development
+  "https://video-reels-platform.vercel.app", // Old Vercel frontend
+  /\.onrender\.com$/, // ✅ Any frontend hosted on Render
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow server-to-server and curl
+      // Allow server-to-server calls (no origin)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+
+      const isAllowed = allowedOrigins.some((allowed) =>
+        allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
+      );
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         console.warn("❌ CORS blocked for origin:", origin);
@@ -320,6 +325,7 @@ app.use(
   })
 );
 
+// Handle preflight requests
 app.options("*", cors());
 
 // ------------------ MIDDLEWARE ------------------
@@ -348,13 +354,10 @@ app.get("/", (req, res) => {
 });
 
 // ------------------ ERROR HANDLING ------------------
-
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
-// Global error handler
 app.use((err, req, res, next) => {
   console.error("Global Error:", err.message);
   res.status(500).json({
