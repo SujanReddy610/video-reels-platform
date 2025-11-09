@@ -1,0 +1,58 @@
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+*.log.*
+
+# =========================
+# OS & Editor Files
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =========================
+# React / Frontend
+# =========================
+/client/build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# Backend / Server
+# =========================
+/dist/
+/dist-ssr/
+.env.development
+.env.test
+.env.production
+
+# =========================
+# Misc
+# =========================
+coverage/
+*.tgz
+*.bak
+*.swp
+*.local
