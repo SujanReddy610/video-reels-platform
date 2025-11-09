@@ -282,8 +282,6 @@ import "./models/Question.js";
 import "./models/Answer.js";
 import "./models/Badge.js";
 import "./models/privacyModel.js";
-
-// ------------------ ASSOCIATIONS ------------------
 import "./models/associations.js";
 
 // ------------------ DATABASE ------------------
@@ -297,35 +295,29 @@ const __dirname = path.dirname(__filename);
 
 // ------------------ CORS CONFIG ------------------
 const allowedOrigins = [
-  "http://localhost:5173", // Local development
-  "https://video-reels-platform.vercel.app", // Old Vercel frontend
-  /\.onrender\.com$/, // ✅ Any frontend hosted on Render
+  "http://localhost:5173", // Local dev
+  "https://video-reels-platform-1.onrender.com", // Frontend Render URL
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow server-to-server calls (no origin)
+      // Allow same-origin (e.g., direct API call without browser)
       if (!origin) return callback(null, true);
-
-      const isAllowed = allowedOrigins.some((allowed) =>
-        allowed instanceof RegExp ? allowed.test(origin) : allowed === origin
-      );
-
-      if (isAllowed) {
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.warn("❌ CORS blocked for origin:", origin);
+        console.warn("❌ CORS blocked for:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
   })
 );
 
-// Handle preflight requests
+// ✅ Important: handle preflight requests explicitly
 app.options("*", cors());
 
 // ------------------ MIDDLEWARE ------------------
@@ -335,7 +327,7 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// ------------------ API ROUTES ------------------
+// ------------------ ROUTES ------------------
 app.use("/api/videos", videoRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
@@ -348,7 +340,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/groups", groupRoutes);
 
-// ------------------ ROOT TEST ROUTE ------------------
+// ------------------ ROOT ROUTE ------------------
 app.get("/", (req, res) => {
   res.send("🎬 Video Platform API is running successfully!");
 });
@@ -368,15 +360,15 @@ app.use((err, req, res, next) => {
 
 // ------------------ START SERVER ------------------
 const PORT = process.env.PORT || 5000;
-
 sequelize
   .sync({ alter: true })
   .then(() => {
     console.log("✅ Database synced successfully");
     app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
     console.error("❌ Database sync failed:", err);
   });
+
