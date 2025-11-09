@@ -296,28 +296,34 @@ const __dirname = path.dirname(__filename);
 // ------------------ CORS CONFIG ------------------
 const allowedOrigins = [
   "http://localhost:5173", // Local dev
-  "https://video-reels-platform-1.onrender.com", // Frontend Render URL
+  "https://video-reels-platform-1.onrender.com", // Frontend on Render
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow same-origin (e.g., direct API call without browser)
+    origin: (origin, callback) => {
+      // Allow server-to-server or Postman (no origin)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
-        callback(null, true);
+        return callback(null, true);
       } else {
-        console.warn("❌ CORS blocked for:", origin);
-        callback(new Error("Not allowed by CORS"));
+        console.warn("❌ CORS blocked request from:", origin);
+        return callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
+    credentials: true,
   })
 );
 
-// ✅ Important: handle preflight requests explicitly
+// ✅ Handle all preflight requests
 app.options("*", cors());
 
 // ------------------ MIDDLEWARE ------------------
@@ -351,7 +357,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error("Global Error:", err.message);
+  console.error("🌋 Global Error:", err.message);
   res.status(500).json({
     message: "Internal Server Error",
     error: err.message,
@@ -360,6 +366,7 @@ app.use((err, req, res, next) => {
 
 // ------------------ START SERVER ------------------
 const PORT = process.env.PORT || 5000;
+
 sequelize
   .sync({ alter: true })
   .then(() => {
@@ -371,4 +378,3 @@ sequelize
   .catch((err) => {
     console.error("❌ Database sync failed:", err);
   });
-
