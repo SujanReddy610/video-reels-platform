@@ -316,17 +316,23 @@ app.use(cors({
   credentials: true, // IMPORTANT for cookies/JWT in headers
 }));
 
-// *** CRITICAL STEP FOR PERSISTENT CORS ISSUES (REMOVED CRASHING LINE) ***
-// The line app.options('*', cors()); was removed because it was causing a PathError on startup.
-// The app.use(cors) above should handle preflight requests.
-
+// *** FINAL ATTEMPT: MANUAL OPTIONS HANDLER FOR AUTH ROUTE ***
+// This middleware explicitly intercepts OPTIONS requests targeted at /api/auth/* // and ends the response, forcing the correct CORS headers set by app.use(cors) 
+// to be sent back before any routing logic can interfere.
+app.use("/api/auth", (req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        // The cors middleware above already set the headers. Just send the 200 status.
+        return res.sendStatus(200);
+    }
+    next();
+});
 
 // Serve uploaded files (for videos/images temporarily stored)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ------------------ API ROUTES ------------------
 app.use("/api/videos", videoRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes); // authRoutes will now follow the manual OPTIONS handler
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/questions", questionRoutes);
