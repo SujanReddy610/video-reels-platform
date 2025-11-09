@@ -316,12 +316,33 @@ app.use(cors({
   credentials: true, // IMPORTANT for cookies/JWT in headers
 }));
 
-// *** FINAL ATTEMPT: MANUAL OPTIONS HANDLER FOR AUTH ROUTE ***
-// This middleware explicitly intercepts OPTIONS requests targeted at /api/auth/* // and ends the response, forcing the correct CORS headers set by app.use(cors) 
-// to be sent back before any routing logic can interfere.
+// *** FINAL ATTEMPT: MANUAL OPTIONS HANDLER WITH EXPLICIT HEADERS ***
+// This handler finds the allowed origin and explicitly writes all necessary CORS headers.
 app.use("/api/auth", (req, res, next) => {
     if (req.method === 'OPTIONS') {
-        // The cors middleware above already set the headers. Just send the 200 status.
+        const origin = req.headers.origin;
+        let finalOrigin = "*"; 
+
+        // Manually check against the allowed list for the specific origin
+        const isAllowed = allowedOrigins.some(ao => {
+            if (typeof ao === 'string') return ao === origin;
+            if (ao instanceof RegExp) return ao.test(origin);
+            return false;
+        });
+
+        if (isAllowed && origin) {
+            finalOrigin = origin;
+        }
+
+        // Explicitly set all CORS headers to override potential proxy issues
+        res.header("Access-Control-Allow-Origin", finalOrigin);
+        res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+        // Ensure Authorization and Content-Type are allowed
+        res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+        res.header("Access-Control-Allow-Credentials", "true");
+        res.header("Access-Control-Max-Age", "86400"); // Cache preflight response for 24 hours
+
+        // Terminate the preflight request here, sending the manually set headers.
         return res.sendStatus(200);
     }
     next();
