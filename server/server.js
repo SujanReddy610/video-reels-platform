@@ -294,27 +294,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ------------------ CORS CONFIG ------------------
+// ------------------ CORS CONFIG ------------------
 const allowedOrigins = [
-  "http://localhost:5173", // Local dev
-  "https://video-reels-platform-1.onrender.com", // Frontend on Render
+  "http://localhost:5173",
+  "https://video-reels-platform-1.onrender.com",
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // allow server-to-server requests
+      if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       console.warn("❌ CORS blocked request from:", origin);
       return callback(new Error("Not allowed by CORS"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
-    credentials: true, // important for cookies or JWT in headers
+    credentials: true,
   })
 );
 
-// ✅ Handle preflight requests globally
-app.options("*", cors());
+// ✅ REMOVE app.options("*", cors());
+
 
 // ------------------ MIDDLEWARE ------------------
 app.use(express.json());
