@@ -252,7 +252,6 @@
 
 // render mobile
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -299,61 +298,42 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ------------------ CORS Configuration Fix (Simplified Logic) ------------------
-const PRODUCTION_FRONTEND_URL = process.env.FRONTEND_URL || "https://video-reels-platform.onrender.com";
+// ------------------ FINAL RENDER-APPROVED CORS FIX ------------------
+// Render requires explicit header setting based on the frontend URL.
+// IMPORTANT: Ensure you set the environment variable FRONTEND_URL on Render.
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
-const allowedOrigins = [
-  "http://localhost:5173", // Local development
-  PRODUCTION_FRONTEND_URL, 
-  /https?:\/\/.*\.onrender\.com$/, // Allows all subdomains on Render (CRITICAL FIX)
-  /https?:\/\/.*\.vercel\.app$/, // Allows Vercel
-];
+app.use((req, res, next) => {
+    // 1. Set the specific Access-Control-Allow-Origin header (as recommended by Render)
+    // This allows the browser to accept responses from this server.
+    res.setHeader('Access-Control-Allow-Origin', FRONTEND_URL);
 
-// ✅ Simplified CORS configuration middleware
-app.use(cors({
-  origin: allowedOrigins, // Pass the array directly to let the cors package handle the matching
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true, // IMPORTANT for cookies/JWT in headers
-}));
+    // 2. Allow credentials (cookies/JWT)
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-// *** FINAL ATTEMPT: MANUAL OPTIONS HANDLER WITH EXPLICIT HEADERS ***
-// This handler finds the allowed origin and explicitly writes all necessary CORS headers.
-app.use("/api/auth", (req, res, next) => {
+    // 3. Define the allowed methods
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+
+    // 4. Define the allowed headers (CRITICAL for Axios/JWT)
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+
+    // 5. Handle the OPTIONS preflight request
     if (req.method === 'OPTIONS') {
-        const origin = req.headers.origin;
-        let finalOrigin = "*"; 
-
-        // Manually check against the allowed list for the specific origin
-        const isAllowed = allowedOrigins.some(ao => {
-            if (typeof ao === 'string') return ao === origin;
-            if (ao instanceof RegExp) return ao.test(origin);
-            return false;
-        });
-
-        if (isAllowed && origin) {
-            finalOrigin = origin;
-        }
-
-        // Explicitly set all CORS headers to override potential proxy issues
-        res.header("Access-Control-Allow-Origin", finalOrigin);
-        res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-        // Ensure Authorization and Content-Type are allowed
-        res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
-        res.header("Access-Control-Allow-Credentials", "true");
-        res.header("Access-Control-Max-Age", "86400"); // Cache preflight response for 24 hours
-
-        // Terminate the preflight request here, sending the manually set headers.
+        // Cache the preflight for 24 hours
+        res.setHeader('Access-Control-Max-Age', '86400');
         return res.sendStatus(200);
     }
+    
     next();
 });
+
 
 // Serve uploaded files (for videos/images temporarily stored)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ------------------ API ROUTES ------------------
 app.use("/api/videos", videoRoutes);
-app.use("/api/auth", authRoutes); // authRoutes will now follow the manual OPTIONS handler
+app.use("/api/auth", authRoutes); 
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/questions", questionRoutes);
@@ -394,6 +374,7 @@ sequelize
   .sync({ alter: true }) // Automatically update tables
   .then(() => {
     console.log("✅ Database synced successfully");
+    // Ensure the server listens on the correct PORT
     app.listen(PORT, () => {
       console.log(`🚀 Server running at: http://localhost:${PORT}`);
     });
