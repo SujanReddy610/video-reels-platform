@@ -299,21 +299,38 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ------------------ CORS Configuration Fix ------------------
-// CRITICAL FIX: This list MUST contain every domain where your frontend is hosted.
+// ------------------ CORS Configuration Fix (Final Attempt) ------------------
+// Instead of hardcoding every potential URL, we use a more flexible configuration 
+// to allow common development and production patterns.
+
+// Use environment variables for the main production frontend URL
+const PRODUCTION_FRONTEND_URL = process.env.FRONTEND_URL || "https://video-reels-platform.onrender.com";
+
 const allowedOrigins = [
-  "http://localhost:5173", // Local frontend development
-  "https://video-reels-platform.vercel.app", // Example Vercel deployment (if applicable)
-  "https://video-reels-platform-1.onrender.com", // Old testing domain
-  "https://video-reels-platform.onrender.com", // The main production domain (CRITICAL addition)
+  "http://localhost:5173", // Local development
+  PRODUCTION_FRONTEND_URL, 
+  // Allow all subdomains of onrender.com for reliable testing and staging 
+  // on platforms like Render where service IDs generate unique subdomains.
+  /https?:\/\/.*\.onrender\.com$/, 
+  // Allow Vercel for maximum flexibility
+  /https?:\/\/.*\.vercel\.app$/, 
 ];
 
-// ✅ Correct CORS configuration to allow cross-origin requests
+// ✅ Updated CORS configuration to use a RegEx pattern check for flexibility
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (e.g., mobile apps, curl, postman)
+    // 1. Allow requests with no origin (e.g., mobile apps, curl, Postman)
     if (!origin) return callback(null, true); 
-    if (allowedOrigins.includes(origin)) {
+    
+    // 2. Check if the origin is in the allowed list or matches a pattern
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return allowed === origin;
+      }
+      return allowed.test(origin);
+    });
+
+    if (isAllowed) {
       callback(null, true);
     } else {
       // Log the blocked origin for better debugging
