@@ -5,8 +5,8 @@ import axios from "axios";
 // Create Axios instance
 // ------------------
 const API = axios.create({
-  baseURL: "http://localhost:5000/api", // make sure backend runs on this port
-  // baseURL: import.meta.env.VITE_API_URL, // <-- use environment variable
+  // baseURL: "http://localhost:5000/api" , // make sure backend runs on this port
+  baseURL: import.meta.env.VITE_API_URL, // <-- use environment variable
   headers: {
     "Content-Type": "application/json",
   },
