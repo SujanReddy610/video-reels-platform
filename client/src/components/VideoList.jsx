@@ -456,6 +456,13 @@ export default function VideoList({ videos, setVideos, setCurrentPage, handleLog
     setFilteredVideos(filtered.length > 0 ? filtered : []);
   };
 
+  //render update temporary
+  if (!Array.isArray(videos)) {
+    console.warn("Expected array for videos, got:", videos);
+    return null;
+  }
+
+
   // ✅ Category & filters
   const fetchTrending = () => {
     const trending = [...videos].sort(
