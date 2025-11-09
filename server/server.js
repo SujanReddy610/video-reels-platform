@@ -319,7 +319,7 @@ app.use(cors({
 // *** CRITICAL STEP FOR PERSISTENT CORS ISSUES ***
 // Manually handle all OPTIONS requests before hitting the main router/API routes.
 // This forces the preflight response to be sent with the correct headers.
-app.options('*', cors()); 
+// app.options('*', cors()); 
 
 
 // Serve uploaded files (for videos/images temporarily stored)
